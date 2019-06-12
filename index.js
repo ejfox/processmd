@@ -214,13 +214,20 @@ function processJson (file, options, cb) {
 
     // Process content.
     let newContent = ''
+    let cleanYaml = ''
     const cleanProps = cleanFileProps(
       cleanMarkdownProps(Object.assign({}, fileData))
     )
-    const cleanYaml = yaml.safeDump(cleanProps)
+
     let extension = '.yml'
     if (isMarkdown(fileData)) {
-      newContent += fileData.bodyContent + NEWLINE
+      if (fileData.title) newContent += '# ' + fileData.title + NEWLINE
+      if (!fileData.bodyContent && fileData.body) {
+        fileData.bodyContent = fileData.body
+        delete cleanProps.body
+      }
+      if (fileData.bodyContent) newContent += fileData.bodyContent + NEWLINE
+      cleanYaml = yaml.safeDump(cleanProps)
       if (Object.keys(cleanProps).length > 0) {
         newContent =
           FRONTMATTER_SEPERATOR + NEWLINE +
@@ -230,6 +237,7 @@ function processJson (file, options, cb) {
       }
       extension = '.md'
     } else {
+      cleanYaml = yaml.safeDump(cleanProps)
       newContent = cleanYaml
     }
 
@@ -295,7 +303,8 @@ function replaceBackslashes (str) {
 
 // Determine if its data for a markdown file.
 function isMarkdown (data) {
-  return Boolean(data.bodyContent && data.bodyHtml)
+  // return Boolean(data.bodyContent && data.bodyHtml)
+  return true
 }
 
 // Find the common parent directory given an array of files.
